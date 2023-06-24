@@ -12,28 +12,23 @@ server: shiny
 #| context: setup
 #| message: false
 
-# Bloque para operaciones iniciales
-
-library(dplyr)
+# Carga de paquetes
+library(tidyverse)
 library(DT)
 library(sf)
-library(shiny)
 ```
 
 ```{r}
 #| label: lectura-datos
 #| context: data
 
-# Bloque para lectura de datos y compartirlos
-# en todos los bloques de código
-
-# Lectura del archivo DwC
-registros <-
+# Lectura de archivo CSV
+felidos <-
   st_read(
     dsn = "felidos.csv",
     options = c(
-      "X_POSSIBLE_NAMES=decimalLongitude", # columna de longitud decimal
-      "Y_POSSIBLE_NAMES=decimalLatitude"   # columna de latitud decimal
+      "X_POSSIBLE_NAMES=decimalLongitude",
+      "Y_POSSIBLE_NAMES=decimalLatitude"
     ),
     quiet = TRUE
   )
@@ -42,10 +37,8 @@ registros <-
 ```{r}
 #| panel: sidebar
 
-# Barra lateral
-
-# Lista de especies
-lista_especies <- unique(registros$species)
+# Vector ordenado de especies
+lista_especies <- unique(felidos$species)
 lista_especies <- sort(lista_especies)
 lista_especies <- c("Todas", lista_especies)
 
@@ -61,8 +54,7 @@ selectInput(
 ```{r}
 #| panel: fill
 
-# Cuerpo principal de la interfaz de usuario
-
+# Tabla interactiva
 dataTableOutput("tabla")
 ```
 
@@ -70,27 +62,26 @@ dataTableOutput("tabla")
 #| label: servidor
 #| context: server
 
-# Operaciones en el servidor
-
-# Función reactiva para filtrar los registros con base en los controles de entrada
-filtrarRegistros <- reactive({
+# Función reactiva para filtrar los registros de presencia de félidos
+# de acuerdo con el valor de una lista de selección
+filtrar_felidos <- reactive({
   # Valor inicial del objeto que va a retornarse
-  registros_filtrados <- registros
+  felidos_filtrados <- felidos
   
   if (input$especie != "Todas") {
-    registros_filtrados <-
-      registros_filtrados |>
+    felidos_filtrados <-
+      felidos_filtrados |>
       filter(species == input$especie)
   }
 
-  return(registros_filtrados)
-})  
+  return(felidos_filtrados)
+}) 
   
 # Tabla con registros de presencia
 output$tabla <- renderDataTable({
-  registros <- filtrarRegistros()
+  felidos <- filtrar_felidos()
   
-  registros |>
+  felidos |>
     st_drop_geometry() |>
     select(species, stateProvince, locality, eventDate) |>
     datatable(

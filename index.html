@@ -81,9 +81,9 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div class="panel-fill panel-grid g-col-24 g-col-lg-17 pt-3 pt-lg-0">
-<div class="g-col-24">
-<div class="cell panel-fill">
+<div class="panel-center panel-grid g-col-24 g-col-lg-17 pt-3 pt-lg-0">
+<div class="g-col-24 g-col-lg-20 g-start-lg-2">
+<div class="cell panel-center">
 <div class="cell-output-display">
 
 <div class="datatables html-widget html-widget-output shiny-report-size html-fill-item-overflow-hidden html-fill-item" id="tabla" style="width:100%;height:auto;"></div>
@@ -104,7 +104,7 @@ library(sf)
 </script>
  
 <script type="application/shiny-prerendered" data-context="data">
-# Lectura de archivo CSV
+# Carga de datos de registros de presencia de félidos en Costa Rica
 felidos <-
   st_read(
     dsn = "felidos.csv",
@@ -114,6 +114,9 @@ felidos <-
     ),
     quiet = TRUE
   )
+
+# Asignación del CRS WGS84 al objeto felidos
+st_crs(felidos) <- 4326
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -138,9 +141,9 @@ output$tabla <- renderDataTable({
   
   felidos |>
     st_drop_geometry() |>
-    select(species, stateProvince, locality, eventDate) |>
+    select(species, locality, eventDate) |>
     datatable(
-      colnames = c("Especie", "Provincia", "Localidad", "Fecha"),
+      colnames = c("Especie", "Localidad", "Fecha"),
       options = list(
         pageLength = 5,
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')

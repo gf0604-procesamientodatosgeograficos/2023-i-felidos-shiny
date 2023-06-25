@@ -2,7 +2,7 @@
 title: "Félidos de Costa Rica"
 format: 
   html:
-    theme: cosmo
+    theme: litera
     page-layout: custom
 server: shiny
 ---
@@ -10,6 +10,7 @@ server: shiny
 ```{r}
 #| label: inicio
 #| context: setup
+#| warning: false
 #| message: false
 
 # Carga de paquetes
@@ -22,7 +23,7 @@ library(sf)
 #| label: lectura-datos
 #| context: data
 
-# Lectura de archivo CSV
+# Carga de datos de registros de presencia de félidos en Costa Rica
 felidos <-
   st_read(
     dsn = "felidos.csv",
@@ -32,6 +33,9 @@ felidos <-
     ),
     quiet = TRUE
   )
+
+# Asignación del CRS WGS84 al objeto felidos
+st_crs(felidos) <- 4326
 ```
 
 ```{r}
@@ -52,7 +56,7 @@ selectInput(
 ```
 
 ```{r}
-#| panel: fill
+#| panel: center
 
 # Tabla interactiva
 dataTableOutput("tabla")
@@ -83,9 +87,9 @@ output$tabla <- renderDataTable({
   
   felidos |>
     st_drop_geometry() |>
-    select(species, stateProvince, locality, eventDate) |>
+    select(species, locality, eventDate) |>
     datatable(
-      colnames = c("Especie", "Provincia", "Localidad", "Fecha"),
+      colnames = c("Especie", "Localidad", "Fecha"),
       options = list(
         pageLength = 5,
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')

@@ -2,13 +2,17 @@
 title: "Félidos de Costa Rica"
 format: 
   html:
-    theme: litera
     page-layout: custom
+    theme: litera    
+    margin-top: 40px
+    margin-left: 40px
+    margin-bottom: 15px        
+    margin-right: 15px
 server: shiny
 ---
 
 ```{r}
-#| label: inicio
+#| label: carga-paquetes
 #| context: setup
 #| warning: false
 #| message: false
@@ -20,7 +24,7 @@ library(sf)
 ```
 
 ```{r}
-#| label: lectura-datos
+#| label: carga-datos
 #| context: data
 
 # Carga de datos de registros de presencia de félidos en Costa Rica
@@ -39,27 +43,37 @@ st_crs(felidos) <- 4326
 ```
 
 ```{r}
+#| label: panel-widgets-entrada
 #| panel: sidebar
 
-# Vector ordenado de especies
+# Lista ordenada de especies
+# con un elemento adicional = "Todas"
 lista_especies <- unique(felidos$species)
 lista_especies <- sort(lista_especies)
 lista_especies <- c("Todas", lista_especies)
 
-# Selector de especies
+# Widget de lista de selección
 selectInput(
-  inputId = "especie",
-  label = "Especie",
-  choices = lista_especies,
-  selected = "Todas"
+  inputId = "especie",      # identificador del widget
+  label = "Especie",        # etiqueta de la lista
+  choices = lista_especies, # lista de opciones para seleccionar de la lista
+  selected = "Todas"        # opción seleccionada por defecto
 )
 ```
 
 ```{r}
+#| label: panel-widgets-salida
 #| panel: center
 
-# Tabla interactiva
-dataTableOutput("tabla")
+# Encabezado de nivel 3
+h3("Registros de presencia")
+# Línea vacía
+HTML("<p>")
+
+# Widget de tabla interactiva
+dataTableOutput(
+	outputId =  "tabla" # identificador del widget
+)
 ```
 
 ```{r}
@@ -67,11 +81,13 @@ dataTableOutput("tabla")
 #| context: server
 
 # Función reactiva para filtrar los registros de presencia de félidos
-# de acuerdo con el valor de una lista de selección
+# de acuerdo con los filtros especificados por el usuario
 filtrar_felidos <- reactive({
   # Valor inicial del objeto que va a retornarse
   felidos_filtrados <- felidos
   
+  # Se realiza el filtro, solamente si el usario ha seleccionado 
+  # una opción diferente a "Todas" en la lista de selección de especies
   if (input$especie != "Todas") {
     felidos_filtrados <-
       felidos_filtrados |>
@@ -80,18 +96,21 @@ filtrar_felidos <- reactive({
 
   return(felidos_filtrados)
 }) 
-  
-# Tabla con registros de presencia
+
+# Tabla interactiva de registros de presencia
 output$tabla <- renderDataTable({
+	# Filtrado del conjunto de datos
   felidos <- filtrar_felidos()
   
+  # Tabla interactiva
   felidos |>
     st_drop_geometry() |>
     select(species, locality, eventDate) |>
     datatable(
+    	rownames = FALSE,
       colnames = c("Especie", "Localidad", "Fecha"),
       options = list(
-        pageLength = 5,
+      	pageLength = 5,
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
       )
     )

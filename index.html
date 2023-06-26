@@ -85,6 +85,12 @@ ul.task-list li input[type="checkbox"] {
 <div class="g-col-24 g-col-lg-20 g-start-lg-2">
 <div class="cell panel-center">
 <div class="cell-output-display">
+<h3>Registros de presencia</h3>
+</div>
+<div class="cell-output-display">
+<p>
+</p></div>
+<div class="cell-output-display">
 
 <div class="datatables html-widget html-widget-output shiny-report-size html-fill-item-overflow-hidden html-fill-item" id="tabla" style="width:100%;height:auto;"></div>
 </div>
@@ -121,11 +127,13 @@ st_crs(felidos) <- 4326
  
 <script type="application/shiny-prerendered" data-context="server">
 # Función reactiva para filtrar los registros de presencia de félidos
-# de acuerdo con el valor de una lista de selección
+# de acuerdo con los filtros especificados por el usuario
 filtrar_felidos <- reactive({
   # Valor inicial del objeto que va a retornarse
   felidos_filtrados <- felidos
   
+  # Se realiza el filtro, solamente si el usario ha seleccionado 
+  # una opción diferente a "Todas" en la lista de selección de especies
   if (input$especie != "Todas") {
     felidos_filtrados <-
       felidos_filtrados |>
@@ -134,18 +142,21 @@ filtrar_felidos <- reactive({
 
   return(felidos_filtrados)
 }) 
-  
-# Tabla con registros de presencia
+
+# Tabla interactiva de registros de presencia
 output$tabla <- renderDataTable({
+	# Filtrado del conjunto de datos
   felidos <- filtrar_felidos()
   
+  # Tabla interactiva
   felidos |>
     st_drop_geometry() |>
     select(species, locality, eventDate) |>
     datatable(
+    	rownames = FALSE,
       colnames = c("Especie", "Localidad", "Fecha"),
       options = list(
-        pageLength = 5,
+      	pageLength = 5,
         language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
       )
     )
